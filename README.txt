@@ -8,4 +8,4 @@ Pre-installation:
 2) populate the config.php file in the libs folder
 
 
-disponilbe on http://www.antoine-bz.fr/morpion/ 
+available on http://www.antoine-bz.fr/morpion/ 
