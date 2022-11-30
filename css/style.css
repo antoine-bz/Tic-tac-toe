@@ -1,0 +1,78 @@
+a {
+  color: black;
+}
+
+#banniere {
+  background-color: #E4E4E4;
+  overflow: hidden;
+  padding: 3px;
+  display: block;
+}
+
+#banniere > * {
+  margin: 0px;
+  padding: 10px;
+  float: left;
+  display: block;
+}
+
+#titreBanniere {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+#titreHeader {
+  margin: 20px;
+}
+
+#banniere > a {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+#banniere > a:hover {
+  background-color: white;
+}
+
+#pied {
+  bottom:5px;left:5px;right:5px;
+  border-top :1px solid black;
+  padding:20px;
+  margin:10px;
+}
+
+#corps {
+  border :1px solid black;
+  padding:20px;
+  margin:10px;
+}
+
+.warning {
+  border: 2px solid #FF0000;
+  background-color: #FFFF00;
+  padding: 0px 15px;
+}
+
+.clearFix {
+  clear: both;
+}
+
+#divMsg {
+  margin: 20px;
+  margin-top: 70px;
+  padding: 10px;
+  border: 2px solid #5555FF;
+  background-color: #DDDDFF;
+}
+
+#divMsg p {
+  margin: 0px;
+}
+
+.todo {
+  font-weight: bold;
+  color: red;
+}
+

@@ -1,0 +1,17 @@
+/*Chaque rendez-vous est affiché dans un cadre orange avec un fond jaune clair ; le
+nom du médecin est dans une police plus grosse (120 %) et la date et l’heure sont
+écrits en gras.*/
+
+.RDV{
+    background-color: #fff56b;
+    border: 1px solid #FFA500;
+    padding: 10px;
+    margin: 10px;
+}
+
+.nomMedecin{
+    font-size: 120%;
+}
+.dateHeure{
+    font-weight: bold;
+}

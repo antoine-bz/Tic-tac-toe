@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- **** H E A D **** -->
+<head>	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300" rel="stylesheet" type="text/css"/>
+	<title>Morpion test</title>
+	<style type="text/css">
+        body {
+            zoom: 120%;
+            margin: 3%;
+            background-color: grey;
+            padding: 0px;
+            font-family: Merriweather;
+            color:black;
+        }
+
+        h1{
+            color:black;
+            text-align: center;
+            text-decoration: underline;
+        }
+
+        #tabTrait h2{
+            text-decoration: underline;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        #tabTrait{
+            color:black;
+            text-align: center;
+            background-color: white;
+            box-shadow: 10px 1px 10px black;
+            border: 1px solid black;
+            padding: 5px;
+            margin: 10px;
+            width: 30%;
+        }
+
+        #grille{
+            width : 300px;
+            height : 300px;
+            border-collapse: collapse;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .case {
+            background-color: white;   
+            border : solid 0.1px black;       
+            width : 32%;
+            height : 100%;
+            float: left;
+        }
+        .ligne{
+            height : 33%;
+            width : 100%;
+        }
+        .case img{
+            width : 100%;
+            height : 100%;
+        }
+    </style>
+
+
+
+<script type="text/javascript" >
+var morpion = {trait:1,
+        croix:1,
+        rond:2,
+        grille:[[0,0,0],[0,0,0],[0,0,0]]};
+
+function init() {
+    choixTrait();
+    refresh();
+
+    var ligne = document.getElementsByClassName("ligne");
+    var i=0;
+    
+    for (i=0;i<3;i++){
+        var colonne = ligne[i].getElementsByClassName("case");
+        var j=0;
+        for (j=0;j<3;j++){
+            console.log(j,i);
+            console.log(colonne[j].id);
+        }
+    }
+}
+
+function refresh(){
+    poser();
+    if(morpion.trait == 1) {
+        document.getElementById("trait").innerHTML = "Rond";
+    }
+    else if(morpion.trait == 2) {
+        document.getElementById("trait").innerHTML = "Croix";
+    }
+}
+
+function choixTrait() {
+    if(Math.round(Math.random()*1) == 1) {
+        morpion.trait = 1;
+    }
+    else {
+        morpion.trait = 2;
+    }   
+}
+
+function poser(){
+    var casegrille = document.getElementsByClassName("case");
+    for(var i = 0; i < casegrille.length; i++) { 
+        if (casegrille[i].value != "rond" && casegrille[i].value != "croix") {
+            if (morpion.trait == 1) {
+                casegrille[i].setAttribute( "onClick","ajoutrond(this);");
+            }
+            else if (morpion.trait == 2) {
+                casegrille[i].setAttribute( "onClick","ajoutcroix(this);");
+            }
+        }
+        else {
+            casegrille[i].setAttribute( "onClick","");
+        }
+    }
+}
+
+function ajoutcroix(value){
+    value.value="croix"; morpion.trait=1; refresh();  
+    return value.innerHTML= "<img src='https://drive.google.com/uc?export=view&id=119tezegdcBB_PDVQK48wwOTZmkTeHHTV' alt='croix'/>";
+}
+
+function ajoutrond(value){
+    value.value="rond";  morpion.trait=2;  refresh();  
+    return value.innerHTML= "<img src='https://drive.google.com/uc?export=view&id=1IOm1PBUo9vKAe7Q-GQiVEFuZz6CKetrd' alt='rond'/>";
+}
+
+</script>
+</head>
+<!-- **** F I N **** H E A D **** -->
+
+
+<!-- **** B O D Y **** -->
+<body onload="init();">
+    <h1>Morpion</h1>
+    <div id="grille">
+
+        <div class="ligne">
+            <div class="case" id="a1" onclick="" value=0></div>
+            <div class="case" id="b1" onclick="" value=0></div>
+            <div class="case" id="c1" onclick="" value=0></div>
+        </div>
+
+        <div class="ligne">
+            <div class="case" id="b2" onclick="" value=0></div>
+            <div class="case" id="a2" onclick="" value=0></div>
+            <div class="case" id="c2" onclick="" value=0></div>
+        </div>
+
+        <div class="ligne">
+            <div class="case" id="a3" onclick="" value=0></div>
+            <div class="case" id="b3" onclick="" value=0></div>
+            <div class="case" id="c3" onclick="" value=0></div>
+        </div>
+    </div>
+
+    <div id="tabTrait">
+        <h2>Trait:</h2>
+        <div id="trait"></div>
+    </div>
+   
+</body>
