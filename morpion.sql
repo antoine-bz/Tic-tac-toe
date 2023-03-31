@@ -1,3 +1,9 @@
+    drop database if exists morpion;
+
+    create database morpion;
+
+    use morpion;
+
     CREATE TABLE  IF NOT EXISTS `Utilisateur` ( `id_utilisateur` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Identifiant interne unique de l''utilisateur', `pseudo` varchar(50) NOT NULL COMMENT 'Pseudo de l''utilisateur', `passe` varchar(50) NOT NULL COMMENT 'Mot de passe de l''utilisateur' ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
     INSERT INTO `Utilisateur` (`id_utilisateur`, `pseudo`, `passe`) VALUES (1, 'player1', 'pwd1'), (2, 'player2', 'pwd2');
