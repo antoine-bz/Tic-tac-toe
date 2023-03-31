@@ -16,9 +16,9 @@ $BDD_base="base";
 */
 
 // MACHINE LINUX 
-$BDD_host="db5009569963.hosting-data.io:3306";
-$BDD_user="dbu1062167";
-$BDD_password="*.DvVwzt/k7nGb9"; // vide sous windows
-$BDD_base="dbs8114220";
+$BDD_host="localhost";
+$BDD_user="root";
+$BDD_password=""; // vide sous windows
+$BDD_base="morpion";
 
 ?>

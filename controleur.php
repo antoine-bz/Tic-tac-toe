@@ -1,266 +1,214 @@
 <?php
-session_start();
 
-	include_once "libs/maLibUtils.php";	
-	include_once "libs/modele.php"; 
-	include_once "libs/maLibSecurisation.php"; 
-	// cf. injection de dépendances 
+  include_once "libs/maLibUtils.php";
+  include_once "libs/maLibSQL.pdo.php";
+  include_once "libs/maLibSecurisation.php";
+  include_once "libs/modele.php"; 
+  
+  // Démarrage de la session
+  session_start();
+  
+  // On réutilise la query string pour la renvoyer à la prochaine page
+  // Le tableau $qs peut être complété pour être renvoyé à la page de destination
+  $qs = $_GET;
+  // On peut aussi définir une query_string sous forme de chaîne de caractères
+  //$qs = "";
 
+  if ($action = valider("action"))
+  {
+    ob_start ();
+    //echo "Action = '$action' <br />";
+    // ATTENTION : le codage des caractères peut poser PB si on utilise des actions comportant des accents... 
+    // A EVITER si on ne maitrise pas ce type de problématiques
+    
+    // Toutes les actions du contrôleur sont réservées aux utilisateur connectés, sauf l'opération de connexion
+    if ($action != "login") 
+      securiser("index.php");
+    
+    // Un paramètre action a été soumis, on fait le boulot...
+    switch($action)
+    {
+      // Connexion
+      case 'login' :
+        // Par sécurité, on ne recopie pas les éléments dans la query string (pseudo, passe)
+        $qs = [];
+        // On extrait et verifie la présence des champs pseudo et passe
+        if ($pseudo = valider("pseudo"))
+        if ($passe = valider("passe"))
+        {
+          // On vérifie l'utilisateur et on remplit les variables de session
+          if (verifUser($pseudo,$passe)) {
+            // Tout s'est bien passé : on redirige vers la page d'accueil
+            $qs["view"] = "accueil";
+          } else {
+            // Si erreur de connexion : on redirige vers le formulaire de connexion
+            $qs["view"] = "login";
+            // Avec un message d'erreur :
+            $qs["msg"] = "Identifiant ou mot de passe invalide";
+          }
+        }
+      break;
+      
+      // Déconnexion
+      case 'logout' :
+        // On détruit la session
+        session_destroy();
+        // On redirige vers la page de connexion
+        $qs["view"] = "login";
+        // Avec un message :
+        $qs["msg"] = "Déconnexion réussie";
+      break;
+      
+      case 'parties' :
+        $qs["view"] = "parties";
+      break;
 
-	$qs = "";
+      case 'jouerPartie':
+        $id_user=valider("id_user","SESSION");
+        $id_partie=valider("id_partie");
+        $ligne=valider("ligne");
+        $colonne=valider("colonne");
 
-	if ($action = valider("action"))
-	{
-		ob_start ();
-		echo "Action = '$action' <br />";
-		// ATTENTION : le codage des caractères peut poser PB si on utilise des actions comportant des accents... 
-		// A EVITER si on ne maitrise pas ce type de problématiques
+        $partie=getPartieById($id_partie)[0];    
+        $parties=json_decode($partie["grille"]);        
+        $parties[$ligne][$colonne]=$id_user;
+        $partie["grille"]= json_encode($parties);
 
-		/* TODO: A REVOIR !!
-		// Dans tous les cas, il faut etre logue... 
-		// Sauf si on veut se connecter (action == Connexion)
+        if(valider("id_user","SESSION")==$partie["id_utilisateur1"])
+        {
+          $id_adversaire=$partie["id_utilisateur2"];
+        }
+        else
+        {
+          $id_adversaire=$partie["id_utilisateur1"];
+        }
 
-		if ($action != "Connexion") 
-			securiser("login");
-		*/
+        $partie["trait"]=$id_adversaire;
 
-		// Un paramètre action a été soumis, on fait le boulot...
-		switch($action)
-		{
-			
-			
-			// Connexion //////////////////////////////////////////////////
-			case 'Connexion' :
-				// On verifie la presence des champs login et passe
-				$qs = "?view=login&erreur=1&msg=" . urlencode("Login ou mot de passe manquant");
-				if ($login = valider("login"))
-				if ($passe = valider("passe"))
-				{
-					// On verifie l'utilisateur, 
-					// et on crée des variables de session si tout est OK
-					// Cf. maLibSecurisation
-					if (verifUser($login,$passe)) {
-						// tout s'est bien passé, doit-on se souvenir de la personne ? 
-						$iduser=getIduser($password,$login);
-						if (valider("remember")) {
-							setcookie("idUser", $iduser, time()-3600);
-							setcookie("login",$login , time()-3600);
-							setcookie("passe",$password, time()-3600);
-							setcookie("remember",true, time()-3600);
-							setcookie("connecte",true, time()-3600);
-						} else {
-							setcookie("idUser", $iduser, time()-3600);
-							setcookie("login","", time()-3600);
-							setcookie("passe","", time()-3600);
-							setcookie("remember",false, time()-3600);
-						}
-						$qs = "?view=accueil";
-					}
-					else $qs = "?view=login&erreur=1&msg=" . urlencode("Identifiants incorrects");
-		
-				}
+        //echo json_encode($partie);
+        UpdateGrille($id_partie,$partie["grille"],$partie["trait"]);
+        $qs=array();
+        
+        header("Location:./parti.php?partie=$id_partie&id_user=$id_user");
+        die("");
+        $qs["view"]="partie";
+        $qs["partie"]=$id_partie;
+        break;
 
-				// On redirigera vers la page index automatiquement
-			break;
+        case "VoteRestart":
+          $id_user=valider("id_user","SESSION");
+          $id_partie=valider("id_partie");
+          $partie=getPartieById($id_partie)[0];
+          if(valider("id_user","SESSION")==$partie["id_utilisateur1"])
+            {
+              $id_adversaire=$partie["id_utilisateur2"];
+            }
+            else
+            {
+              $id_adversaire=$partie["id_utilisateur1"];
+            } 
+          if ($partie["recommencer"]==0)
+          {
+            VoteRestart($id_partie,$id_user);
+          }
+          else
+          {
+            $grille="[[0,0,0],[0,0,0],[0,0,0]]";
+            if (rand(0,1)==0)
+            {
+              $trait=$partie["id_utilisateur1"];
+            }
+            else
+            {
+              $trait=$partie["id_utilisateur2"];
+            }
+            restart($id_partie,$trait,$grille);
+            
+          }
+         
+          forcerefresh($id_partie,$id_adversaire);
+          header("Location:./parti.php?partie=$id_partie&id_user=$id_user");
+          die("");
+          $qs["view"]="partie";
+          $qs["partie"]=$id_partie;
+          break;
 
-			case 'Logout' :
-			case 'logout' :
-				// traitement métier
-				session_destroy(); // 1) traitement 
-				// 2) choisir la vue suivante 
-				$qs = "?view=login";
-			break;
+          case 'testNouveau':
+            $id_user=valider("id_user","SESSION");
+            $id_partie=valider("id_partie");
+            if(testnouveau($id_partie)==$id_user)
+            {
+              unsetnouveau($id_partie);
+              echo "refreshGrille";
+              die("");
+            }
+            else
+            {
+              echo "0";
+              die("");
+            }
+          break;
 
-			case "Inscription" :
-				
-				$qs = "?view=inscription&erreur=1&msg=" . urlencode("Identifiants manquants");
-				if ($mail = valider("mail"))
-				if ($password = valider("password")){
-					$qs = "?view=inscription"; 
-					switch (valider("main-categories")) {
-						case '1':
-							if ($nomEtudiant = valider("nomEtudiant"))
-							if ($prenomEtudiant = valider("prenomEtudiant"))
-							{
-								$idEtudiants=creerEtudiant($prenomEtudiant,$nomEtudiant);
-								$idEtud=intval($idEtudiants);
-								creerConnexionEtudiant($idEtud,$password,$mail);
-								$qs = "?view=inscription&msg=" . urlencode("Création réussie, connectez-vous"); 
-							}
-							else//Si les informations sont incorrectes
-							$qs = "?view=inscription&erreur=1&msg=" . urlencode("Identifiants incorrects");
-							break;
-						case '2':
-							if ($nomEntreprise = valider("nomEntreprise"))
-							if ($secteurAct = valider("secteurAct"))	
-							{
-								$idEntreprises =creerEntreprise($nomEntreprise,$secteurAct);
-								$idEnt=intval($idEntreprises);
-								creerConnexionEntreprise($idEnt,$password,$mail);
-								$qs = "?view=inscription&msg=" . urlencode("Création réussie, connectez-vous"); 
-							}
-							else //Si les informations sont incorrectes
-							$qs = "?view=inscription&erreur=1&msg=" . urlencode("Identifiants incorrects");
-							break;
-						default:
-							$qs = "?view=inscription&erreur=1&msg=" . urlencode("Identifiants incorrects case");
-							break;
-					}
-				}
+          case 'nouveauMessage':
+            $id_user=valider("id_user","SESSION");
+            $id_partie=valider("id_partie");
+            $id_adversaire=valider("id_adversaire");
+            $message=valider("message");
+            $from=valider("from");
 
-				// traitement métier
-				// redirection vers la vue suivante
-			break;
-			case "Rechercher" :
-				$secteur = valider("Secteur");
-				$ville = valider("Ville" );
-				$qs = "?view=recherche&type=r&secteur=" . urlencode($secteur). "&ville=" . urlencode($ville);
-				break;
-			case 'Filtrer':
-				$secteur = valider("Secteur");
-				$ville = valider("Ville" );
-				$RemunerationOn =valider("Remuneration");
-				if($RemunerationOn=="on"){
-					$Remuneration=1;
-				}else if($RemunerationOn=="off"){
-					$Remuneration=0;
-				}
-				$Activité =valider("secteurAct");
-				$DureeMin =valider("DuréeMin");
-				$Publiee =valider("FiltrePubli");
-				$TypeStage =valider("TypeStage");
-				$DureeMax =valider("DuréeMax");
-				$qs = "?view=recherche&type=f&secteur=" . urlencode($secteur). "&ville=" . urlencode($ville);
-				$qs .= "&Remuneration=" . urlencode($Remuneration). "&Activité=" . urlencode($Activité);
-				$qs .= "&DureeMin=" . urlencode($DureeMin). "&Publiee=" . urlencode($Publiee);
-				$qs .= "&TypeStage=" . urlencode($TypeStage);
-				$qs .= "&DureeMax=" . urlencode($DureeMax);
-				break;
+            if ($message=="")
+            {
+              header("Location:./chat.php?id_adversaire=$id_adversaire&id_user=$id_user");
+              die("");
+            }
 
-			case 'Enregistrer' :
-			case 'Modifier':
-				$idUser = valider("idUser","SESSION");
-				//echo $idUser;
-				if(isEntreprise($idUser)){
-					
-					if($modif = valider("modif")){
-						$idEntreprises=getIdentreprises(valider("idUser","SESSION"));
-						$nom=valider("nom");
-						$adresse=valider("adresse");
-						$telephone=valider("telephone");
-						$mail=valider("mail");
-						$password=valider("password");
-						UpdateEntreprise($idEntreprises,$nom,$adresse,$telephone);
-						UpdateConnexion($idUser,$mail,$password);
-						$qs = "?view=compteEntreprise";
-					}
-					else $qs = "?view=compteEntreprise&modifier=1";
-				}	
-				else if(isEtudiant($idUser)){
-				
-					if($modif = valider("modif")){
-						$idEtudiants=getIdetudiant(valider("idUser","SESSION"));
-						$nom=valider("nom");
-						$prenom=valider("prenom");
-						$age=valider("age");
-						$adresse=valider("adresse");
-						$telephone=valider("telephone");
-						$mail=valider("mail");
-						$password=valider("password");
-						UpdateEtudiant($idEtudiants,$nom,$prenom,$age,$adresse,$telephone);
-						UpdateConnexions($idUser,$mail,$password);
-						$qs = "?view=compteEtudiant";
-					}
-					else $qs = "?view=compteEtudiant&modifier=1";
-				}
-				break;	
-			case'publierannonce':
-				$qs = "?view=publication&erreur=1&msg=" . urlencode("Informations incorrects");
-				$idEntreprises=getIdentreprises(valider("idUser","SESSION"));
-				if($nom=valider("nom"))
-				if($duree=valider("duree"))
-				if($type=valider("type"))
-					{
-						$description=valider("description");
-						$Remuneration=valider("remuneration");
-						$date=valider("date");
-						NvAnnonce($nom,$idEntreprises,$Remuneration,$date,$duree,$type,$description);
-						$qs = "?view=publication&msg=" . urlencode("Publication réussie");
-					}
-				break;
-			case 'supprimerannonce':
-				$qs = "?view=myannonces&msg=" . urlencode("annonce supprimée");
-				$idAnnonce = valider('idannonce');
-				Deletefav2($idAnnonce);
-				DeleteRep($idAnnonce);
-				DeleteAnn($idAnnonce);
-				break;
+            $conv=getConversation($id_user,$id_adversaire);
+            echo $id_adversaire;
+            $id_conversation=$conv[0]["id_conversation"];
 
-			case 'supprimerfavEtudiant':
-				
-				$idAnnonce = valider('idannonce');
-				$idEtudiant = valider('idetudiant');
-				Deletefav($idAnnonce,$idEtudiant);
-				$qs = "?view=annonce&id=$idAnnonce&msg=" . urlencode("favoris supprimé");
-				break;
-			case 'ajouterfavEtudiant':
-				$idAnnonce = valider('idannonce');
-				$idEtudiant = valider('idetudiant');
-				ajoutFav($idEtudiant,$idAnnonce);
-				$qs = "?view=annonce&id=$idAnnonce&msg=" . urlencode("favoris ajouté");
-				break;
-			case 'SupprimerReponse':
-				$idAnnonce = valider('idannonce');
-				$idEtudiant = valider('idetudiant');
-				DeleteRep2($idEtudiant,$idAnnonce);
-				$qs = "?view=annonce&id=$idAnnonce&msg=" . urlencode("réponse supprimée");
-				break;
-		case 'PostulerAnnonce':
-				
-				$idAnnonce = valider('idannonce');
-				$idEtudiant = valider('idetudiant');
-				$message = valider('message');
-				ajoutReponse($idEtudiant,$idAnnonce,$message);
-				$qs = "?view=annonce&id=$idAnnonce&msg=" . urlencode("vous venez de postuler à cette annonce");
-				break;
-		case 'reponsePostuler':
-				
-				$idAnnonce = valider('idannonce');
-				$idEtudiant = valider('idetudiant');
-				$reponse = valider('reponse');
-				if($reponse=="Accepter"){
-					$rep='yes';
-				}
-				else if($reponse=="Refuser"){
-					$rep="no";
-				}
-				majRepReponse($idEtudiant,$idAnnonce,$rep);
-				$qs = "?view=annonce&id=$idAnnonce";
-				break;
-		}
+            posterMessage($id_conversation,$id_user,$message);
+            $qs=array();
+            if ($from=="chat")
+            {
+              header("Location:./chat.php?id_adversaire=$id_adversaire&id_user=$id_user");
+              die("");
+            }
+            $qs["view"]="partie";
+            $qs["partie"]=$id_partie;
+          break;
+          
+          case 'testStatut':
+            if(!$id_user=valider("id_user","SESSION")){
+              $id_user=valider("id_user");
+            }
+            $id_adversaire=valider("id_adversaire");
+            $conv=getConversation($id_user,$id_adversaire);
+            $id_conversation=$conv[0]["id_conversation"];
+            if(testStatut($id_conversation)==$id_user)
+            {
+              unsetStatut($id_conversation);
+              echo "refreshChat";
+              die("");
+            }
+            else
+            {
+              echo "0";
+              die("");
+            }
+          break;
+            
+    }
+  }
 
-	}
+  // On redirige toujours vers la page index, mais on ne connait pas le répertoire de base
+  // On l'extrait donc du chemin du script courant : $_SERVER["PHP_SELF"]
+  // Par exemple, si $_SERVER["PHP_SELF"] vaut /chat/data.php, dirname($_SERVER["PHP_SELF"]) contient /chat
+  $urlBase = dirname($_SERVER["PHP_SELF"]) . "/index.php";
 
-	// On redirige toujours vers la page index, mais on ne connait pas le répertoire de base
-	// On l'extrait donc du chemin du script courant : $_SERVER["PHP_SELF"]
-	// Par exemple, si $_SERVER["PHP_SELF"] vaut /chat/data.php, dirname($_SERVER["PHP_SELF"]) contient /chat
+  // On redirige vers la page index avec les bons arguments
+  rediriger($urlBase, $qs);
 
-	$urlBase = dirname($_SERVER["PHP_SELF"]) . "/index.php";
-	// On redirige vers la page index avec les bons arguments
-
-	header("Location:" . $urlBase . $qs);
-
-	// On écrit seulement après cette entête
-	ob_end_flush();
-	
+  // On écrit seulement après cette entête
+  ob_end_flush();
+  
 ?>
-
-
-
-
-
-
-
-
-
-

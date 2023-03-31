@@ -110,7 +110,7 @@ $id_adversaire=valider("id_adversaire");
 <!-- **** F I N **** H E A D **** -->
 <script type="text/javascript">//scroll au chargement de la page
  //var i = setInterval('bla()', 5);
-function bla()//scroll en bas de page
+function bla()
   {
   document.documentElement.scrollTop=document.documentElement.scrollHeight;
   }

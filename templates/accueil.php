@@ -12,7 +12,7 @@ include_once("libs/modele.php");
 ?>
 <link rel="stylesheet" type="text/css" href="css/styleAccueil.css">
 <h2>Bienvenue</h2>
-<p>Ceci est un projet personnel, il s'agit du jeu morpion qui a été reproduit en web avec un chat en temps réel.<br>
-(Un compte est nécessaire pour jouer et utiliser le site.)</p>
+<!--<p>Ceci est un projet personnel, il s'agit du jeu morpion qui a été reproduit en web avec un chat en temps réel.<br>
+(Un compte est nécessaire pour jouer et utiliser le site.)</p>-->
 
 
